@@ -1,0 +1,598 @@
+<style>
+  :root{
+    color-scheme: dark;
+    --bg:#14131f;
+    --bg-2:#100f19;
+    --panel:#1c1b2a;
+    --panel-2:#22203190;
+    --line:#302d44;
+    --line-soft:#26243a;
+    --ink:#e8e6f0;
+    --muted:#8a86a3;
+    --muted-2:#615d78;
+    --gold:#f5b942;
+    --gold-dim:#c8912b;
+    --cyan:#5ad1e6;
+    --green:#57e08a;
+    --amber:#f5b942;
+    --red:#ff6b6b;
+    --violet:#9a86ff;
+    --mono:ui-monospace,"SF Mono","Cascadia Code","JetBrains Mono",Menlo,Consolas,monospace;
+    --r:8px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 600px at 80% -10%, #211c33 0%, transparent 60%),
+      radial-gradient(900px 500px at 0% 110%, #1a2230 0%, transparent 55%),
+      var(--bg);
+    color:var(--ink);
+    font-family:var(--mono);
+    font-size:13px;
+    line-height:1.45;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{
+    max-width:1180px;
+    margin:0 auto;
+    padding:16px 16px 40px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+
+  /* ---------- top status bar ---------- */
+  .topbar{
+    display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+    padding:10px 14px;
+    background:linear-gradient(180deg,#201e30,#191826);
+    border:1px solid var(--line);
+    border-radius:var(--r);
+    box-shadow:0 2px 0 #0c0b14, inset 0 1px 0 #ffffff08;
+  }
+  .brand{display:flex;align-items:center;gap:10px;min-width:0}
+  .brand canvas{image-rendering:pixelated;display:block}
+  .brand .name{font-weight:700;letter-spacing:3px;font-size:13px}
+  .brand .name b{color:var(--gold)}
+  .brand .sub{color:var(--muted-2);font-size:10px;letter-spacing:2px}
+  .chips{display:flex;gap:7px;flex-wrap:wrap;margin-left:auto;align-items:center}
+  .chip{
+    display:inline-flex;align-items:baseline;gap:6px;
+    padding:4px 9px;border-radius:6px;
+    background:#100f1a;border:1px solid var(--line-soft);
+    font-size:10px;letter-spacing:1px;color:var(--muted);
+  }
+  .chip b{color:var(--ink);font-size:12px;font-variant-numeric:tabular-nums}
+  .chip.hl{border-color:#4a3c17;background:#241d10}
+  .chip.hl b{color:var(--gold)}
+  .clock{
+    font-variant-numeric:tabular-nums;letter-spacing:1px;color:var(--cyan);
+    font-size:12px;padding-left:4px;border-left:1px solid var(--line);padding:2px 0 2px 12px;
+  }
+
+  /* ---------- main region ---------- */
+  .main{display:grid;grid-template-columns:1fr 320px;gap:12px}
+  @media(max-width:900px){.main{grid-template-columns:1fr}}
+
+  .stage-wrap{
+    position:relative;
+    border:1px solid var(--line);
+    border-radius:var(--r);
+    background:#0c0b14;
+    overflow:hidden;
+    box-shadow:inset 0 0 0 1px #ffffff06, 0 8px 30px -12px #000;
+  }
+  .stage-hd{
+    position:absolute;top:0;left:0;right:0;z-index:3;
+    display:flex;align-items:center;gap:8px;
+    padding:8px 12px;
+    background:linear-gradient(180deg,#0c0b14ee,#0c0b1400);
+    pointer-events:none;
+  }
+  .stage-hd .t{font-size:10px;letter-spacing:3px;color:var(--muted)}
+  .stage-hd .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+  #stage{display:block;width:100%;height:auto;image-rendering:pixelated;cursor:pointer}
+  .stage-hint{
+    position:absolute;bottom:8px;left:12px;z-index:3;
+    font-size:10px;color:var(--muted-2);letter-spacing:1px;pointer-events:none;
+  }
+
+  /* ---------- detail panel ---------- */
+  .detail{
+    border:1px solid var(--line);border-radius:var(--r);
+    background:linear-gradient(180deg,#211d16,#1b1a28 42%);
+    padding:0;overflow:hidden;display:flex;flex-direction:column;
+  }
+  .detail .cap{
+    padding:10px 14px;border-bottom:1px solid #3a3320;
+    background:linear-gradient(180deg,#2b2413,#211c11);
+    display:flex;align-items:center;gap:9px;
+  }
+  .detail .cap .av{width:28px;height:28px;image-rendering:pixelated;border-radius:5px;background:#0c0b14;border:1px solid #4a3c17}
+  .detail .cap .who{min-width:0}
+  .detail .cap .nm{font-weight:700;color:var(--gold);font-size:13px;letter-spacing:.5px}
+  .detail .cap .rl{font-size:10px;color:#b9a06a;letter-spacing:1px}
+  .detail .body{padding:13px 14px;display:flex;flex-direction:column;gap:11px}
+  .kv{display:flex;flex-direction:column;gap:3px}
+  .kv .k{font-size:10px;color:var(--muted);letter-spacing:1px}
+  .kv .v{font-size:12px;color:var(--ink)}
+  .state-row{display:flex;align-items:center;gap:8px}
+  .state-led{width:9px;height:9px;border-radius:50%;flex:none}
+  .divider{height:1px;background:var(--line-soft);margin:1px 0}
+  .btn{
+    margin-top:2px;text-align:center;padding:8px;border-radius:6px;
+    background:#100f1a;border:1px solid var(--line);color:var(--muted);
+    font-family:var(--mono);font-size:11px;letter-spacing:1px;cursor:pointer;
+  }
+  .btn.primary{background:linear-gradient(180deg,#f5b942,#d99a1f);color:#241a06;border-color:#8a6414;font-weight:700}
+  .btn:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+
+  /* ---------- bottom grid ---------- */
+  .bottom{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:900px){.bottom{grid-template-columns:1fr}}
+  .card{border:1px solid var(--line);border-radius:var(--r);background:var(--panel);overflow:hidden}
+  .card > .hd{
+    padding:8px 13px;border-bottom:1px solid var(--line-soft);
+    font-size:10px;letter-spacing:2px;color:var(--muted);
+    display:flex;align-items:center;gap:8px;
+  }
+  .card > .hd .tag{margin-left:auto;color:var(--muted-2);font-size:10px}
+
+  .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line-soft)}
+  .tile{background:var(--panel);padding:11px 13px}
+  .tile .lab{font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:5px}
+  .tile .num{font-size:19px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:.5px}
+  .tile .num.c{color:var(--gold)}
+  .tile .num small{font-size:11px;color:var(--muted);font-weight:400;margin-left:2px}
+
+  /* quota gauges */
+  .quota{padding:12px 13px;display:flex;flex-direction:column;gap:12px}
+  .gauge .grow{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+  .gauge .glab{font-size:11px;color:var(--ink);letter-spacing:.5px}
+  .gauge .glab i{color:var(--muted-2);font-style:normal;font-size:10px;margin-left:6px}
+  .gauge .gpct{font-size:11px;font-variant-numeric:tabular-nums;color:var(--muted)}
+  .track{position:relative;height:12px;border-radius:3px;background:#100f1a;border:1px solid var(--line-soft);overflow:hidden}
+  .fill{position:absolute;top:0;left:0;bottom:0;border-radius:2px 0 0 2px;
+    background:repeating-linear-gradient(90deg,#f5b942 0 6px,#e0a832 6px 8px)}
+  .fill.warn{background:repeating-linear-gradient(90deg,#ff8a5b 0 6px,#f5713f 6px 8px)}
+  .fill.crit{background:repeating-linear-gradient(90deg,#ff6b6b 0 6px,#e64a4a 6px 8px)}
+  .fill.cool{background:repeating-linear-gradient(90deg,#5ad1e6 0 6px,#3fb6cc 6px 8px)}
+  .pace{position:absolute;top:-2px;bottom:-2px;width:2px;background:#fff;box-shadow:0 0 6px #fff;z-index:2}
+  .gmeta{display:flex;justify-content:space-between;margin-top:4px;font-size:10px;color:var(--muted-2)}
+  .gmeta .over{color:var(--red)}
+
+  /* task list */
+  .tasks{display:flex;flex-direction:column}
+  .task{padding:10px 13px;border-bottom:1px solid var(--line-soft);display:flex;align-items:center;gap:10px}
+  .task:last-child{border-bottom:0}
+  .task .p{font-size:10px;font-weight:700;color:var(--violet);width:22px;flex:none;letter-spacing:1px}
+  .task .info{min-width:0;flex:1}
+  .task .tt{font-size:12px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .task .meta{font-size:10px;color:var(--muted);letter-spacing:.5px}
+  .badge{font-size:9px;letter-spacing:1px;padding:3px 7px;border-radius:5px;flex:none;font-weight:700}
+  .badge.run{background:#12301f;color:var(--green);border:1px solid #1e5236}
+  .badge.wait{background:#2c2510;color:var(--gold);border:1px solid #57451a}
+  .badge.hold{background:#2a2333;color:var(--violet);border:1px solid #443a5e}
+  .ver{font-size:10px;color:var(--muted-2);flex:none;font-variant-numeric:tabular-nums}
+
+  .foot{color:var(--muted-2);font-size:10px;letter-spacing:1px;text-align:center;padding-top:2px}
+  .foot b{color:var(--muted)}
+</style>
+
+<div class="app">
+
+  <!-- ============ TOP BAR ============ -->
+  <div class="topbar">
+    <div class="brand">
+      <canvas id="logo" width="26" height="26" style="width:26px;height:26px"></canvas>
+      <div>
+        <div class="name"><b>AGENT</b> OFFICE</div>
+        <div class="sub">픽셀 사무실 · SESSION #12</div>
+      </div>
+    </div>
+    <div class="chips">
+      <span class="chip">세션 <b>12</b></span>
+      <span class="chip">워커 <b>2</b> <span style="color:var(--muted-2)">/15분 5</span></span>
+      <span class="chip">태스크 <b>11</b></span>
+      <span class="chip hl">승인대기 <b>6</b></span>
+      <span class="chip">위임 <b>3</b></span>
+      <span class="clock" id="clock">--:--:--</span>
+    </div>
+  </div>
+
+  <!-- ============ MAIN ============ -->
+  <div class="main">
+    <div class="stage-wrap">
+      <div class="stage-hd"><span class="dot"></span><span class="t">AGENT OFFICE · LIVE</span></div>
+      <canvas id="stage" width="620" height="360"></canvas>
+      <div class="stage-hint">▶ 캐릭터를 클릭해 상세 보기</div>
+    </div>
+
+    <div class="detail" id="detail">
+      <div class="cap">
+        <canvas class="av" id="detailAv" width="16" height="16"></canvas>
+        <div class="who">
+          <div class="nm" id="dName">Master Staff</div>
+          <div class="rl" id="dRole">마스터 / 스태프 오케스트레이터</div>
+        </div>
+      </div>
+      <div class="body">
+        <div class="state-row">
+          <span class="state-led" id="dLed" style="background:var(--gold);box-shadow:0 0 8px var(--gold)"></span>
+          <div class="kv" style="gap:1px">
+            <span class="v" id="dState" style="font-weight:700">대기중 · suggestion mode</span>
+            <span class="k" id="dLast">마지막 활동 1분 전</span>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="kv"><span class="k">작업</span><span class="v" id="dTask">suggestion mode</span></div>
+        <div class="kv"><span class="k">배정 워커</span><span class="v" id="dWorkers">0명</span></div>
+        <div class="kv"><span class="k">누적 호출 / 비용</span><span class="v" id="dCost">398회 · $45.90</span></div>
+        <div class="divider"></div>
+        <div class="btn primary" tabindex="0">▶ 이 에이전트에게 메시지</div>
+        <div class="btn" tabindex="0">작업 로그 보기</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ BOTTOM ============ -->
+  <div class="bottom">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="card">
+        <div class="hd">오늘 작업량 <span class="tag">2026-07-14</span></div>
+        <div class="tiles">
+          <div class="tile"><div class="lab">비용</div><div class="num c">$1,085<small>.20</small></div></div>
+          <div class="tile"><div class="lab">호출</div><div class="num">2,902</div></div>
+          <div class="tile"><div class="lab">입력 tok</div><div class="num">317<small>K</small></div></div>
+          <div class="tile"><div class="lab">출력 tok</div><div class="num">2.4<small>M</small></div></div>
+          <div class="tile"><div class="lab">캐시읽기</div><div class="num">1,140<small>.7M</small></div></div>
+          <div class="tile"><div class="lab">캐시쓰기</div><div class="num">15.1<small>M</small></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="hd">주간 한도 <span class="tag">권고 페이스 <b style="color:#fff">|</b></span></div>
+        <div class="quota" id="quota"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="hd">태스크 <span class="tag">오너 포트폴리오 사이트 — 마감 오늘</span></div>
+      <div class="tasks" id="tasks"></div>
+    </div>
+  </div>
+
+  <div class="foot">픽셀페이지 에이전트 · <b>프로토타입</b> — 목업 데이터 · 캔버스 도트 렌더</div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---------- palettes for pixel characters ---------- */
+  const SKIN="#e8b48a", SKIN2="#d69b6f", EYE="#2a2233";
+  const ROLE = {
+    master:{hat:"#c94b4b", hair:"#2a2233", shirt:"#3a3550", shirt2:"#2c2840", pants:"#20202c", tie:"#f5b942"},
+    se:{hat:"#f5b942", hair:null, shirt:"#3c66c9", shirt2:"#2f52a6", pants:"#26314a", tie:null, hardhat:true},
+    pm:{hat:null, hair:"#3a2a20", shirt:"#c94b4b", shirt2:"#a53b3b", pants:"#2a2436", tie:"#e8e6f0"},
+    worker:{hat:"#f5b942", hair:null, shirt:"#c98a3a", shirt2:"#a5702c", pants:"#2a2436", hardhat:true},
+    staff:{hat:null, hair:"#2a2233", shirt:"#3aa564", shirt2:"#2f8650", pants:"#26314a", tie:null},
+  };
+
+  /* ---------- agents (mock) ---------- */
+  const agents = [
+    {id:"master", name:"Master Staff", role:"pm-orch", roleFull:"마스터 / 스태프 오케스트레이터", kind:"master",
+      x:300, y:120, status:"대기중 · suggestion mode", led:"gold", task:"suggestion mode", workers:"0명",
+      cost:"398회 · $45.90", last:"마지막 활동 1분 전", bubble:"suggestion mode", walk:false},
+    {id:"se", name:"Sys Engineer", role:"se", roleFull:"시스템 엔지니어 · 인프라/감시", kind:"se",
+      x:150, y:120, status:"작업중 · 워처 3곳 수리", led:"green", task:"busy 오탐 로직 수술 (와처)", workers:"코덱스 2",
+      cost:"1,437회 · $210.4", last:"마지막 활동 방금", bubble:"워처 수리 중", walk:false},
+    {id:"1bav34", name:"SubPM 1bav34", role:"pm", roleFull:"서브 PM · 서버/프론트", kind:"pm",
+      x:430, y:180, status:"홀드 · 검수 대기", led:"gold", task:"컨텍스트 100% · 검수 통과 대기", workers:"0명",
+      cost:"612회 · $88.10", last:"1시간째 홀드", bubble:"검수 대기", walk:false},
+    {id:"njzbjb", name:"SubPM njzbjb", role:"pm", roleFull:"서브 PM · 노션 자동화", kind:"pm",
+      x:490, y:120, status:"작업중 · 칸반 구조화", led:"green", task:"노션 칸반보드 작업위원 구조 중", workers:"워커 1",
+      cost:"544회 · $71.20", last:"마지막 활동 방금", bubble:"칸반 구조 중", walk:false},
+    {id:"8nhj66", name:"SubPM 8nhj66", role:"pm", roleFull:"서브 PM · 문서/PPT", kind:"pm",
+      x:540, y:200, status:"작업중 · PPT 배치", led:"green", task:"오너 설명 PPT 제작 (C/배치)", workers:"워커 1",
+      cost:"421회 · $60.00", last:"마지막 활동 2분 전", bubble:"PPT C/배치 중", walk:false},
+    {id:"j20iyr", name:"SubPM j20iyr", role:"pm", roleFull:"서브 PM · 포트폴리오 사이트", kind:"pm",
+      x:470, y:260, status:"작업중 · 사이트 제작", led:"green", task:"오너 포트폴리오 사이트 (응대 에이전트 내장)", workers:"워커 2",
+      cost:"889회 · $132.5", last:"마지막 활동 방금", bubble:"포트폴리오 사이트 중", walk:false},
+    {id:"w1", name:"Worker #1", role:"worker", roleFull:"테스트 워커", kind:"worker",
+      x:120, y:230, status:"작업중 · 테스트", led:"green", task:"다음 테스트 워커 1호", workers:"—",
+      cost:"120회 · $9.10", last:"방금", bubble:"테스트 워커 1호", walk:true},
+    {id:"w2", name:"Worker #2", role:"worker", roleFull:"테스트 워커", kind:"worker",
+      x:210, y:245, status:"작업중 · 테스트", led:"green", task:"다음 테스트 워커 2호", workers:"—",
+      cost:"98회 · $7.40", last:"방금", bubble:"테스트 워커 2호", walk:true},
+    {id:"fin", name:"Finance", role:"staff", roleFull:"스태프 · 파이낸스", kind:"staff",
+      x:560, y:70, status:"산책중", led:"cyan", task:"비용 리포트 집계", workers:"—",
+      cost:"64회 · $4.20", last:"5분 전", bubble:"산책중", walk:true},
+    {id:"agency", name:"Agency", role:"staff", roleFull:"스태프 · 에이전시", kind:"staff",
+      x:90, y:300, status:"산책중", led:"cyan", task:"외부 채널 응대", workers:"—",
+      cost:"77회 · $5.80", last:"3분 전", bubble:"산책중", walk:true},
+    {id:"net", name:"Agentic Network", role:"staff", roleFull:"스태프 · 에이전틱 네트워크", kind:"staff",
+      x:250, y:315, status:"여유부리는중", led:"cyan", task:"에이전트 간 매핑 확인", workers:"—",
+      cost:"52회 · $3.10", last:"방금", bubble:"여유부리는중", walk:true},
+  ];
+
+  const LED = {gold:"#f5b942", green:"#57e08a", cyan:"#5ad1e6", red:"#ff6b6b"};
+
+  /* ================= pixel character drawing ================= */
+  // draws a ~14x18 blocky character centered at (0, baseline)
+  function px(ctx,x,y,w,h,c){ ctx.fillStyle=c; ctx.fillRect(x,y,w,h); }
+
+  function drawChar(ctx, kind, frame){
+    const p = ROLE[kind];
+    // shadow
+    px(ctx,-6,15,12,3,"#00000055");
+    // legs (walk frame shifts)
+    const ls = frame ? 1 : 0;
+    px(ctx,-4,10+ls,3,5,p.pants);
+    px(ctx,1,10-ls,3,5,p.pants);
+    // body
+    px(ctx,-5,3,10,8,p.shirt);
+    px(ctx,-5,3,3,8,p.shirt2);      // left shade
+    px(ctx,3,3,2,8,p.shirt2);
+    if(p.tie){ px(ctx,-1,3,2,6,p.tie); }
+    // arms
+    px(ctx,-6,4,2,5,p.shirt2);
+    px(ctx,4,4,2,5,p.shirt2);
+    px(ctx,-6,8,2,2,SKIN);          // hands
+    px(ctx,4,8,2,2,SKIN);
+    // head
+    px(ctx,-4,-6,8,8,SKIN);
+    px(ctx,-4,-6,2,8,SKIN2);
+    // eyes
+    px(ctx,-2,-3,2,2,EYE);
+    px(ctx,1,-3,1,2,EYE);
+    // hair or hat
+    if(p.hardhat){
+      px(ctx,-5,-8,10,3,p.hat);      // brim
+      px(ctx,-3,-10,6,3,p.hat);      // dome
+      px(ctx,-1,-11,2,1,"#fff6");    // ridge
+    } else if(p.hair){
+      px(ctx,-4,-8,8,3,p.hair);
+      px(ctx,-4,-6,1,3,p.hair);
+      px(ctx,3,-6,1,3,p.hair);
+    }
+    if(p.hat && !p.hardhat){         // master cap
+      px(ctx,-4,-8,8,2,p.hat);
+      px(ctx,-5,-6,10,1,p.hat);
+    }
+  }
+
+  /* logo: little pixel monitor */
+  (function logo(){
+    const c=document.getElementById("logo"), g=c.getContext("2d");
+    g.imageSmoothingEnabled=false;
+    const S=2; g.scale(S,S);
+    px(g,1,1,11,9,"#302d44");
+    px(g,2,2,9,7,"#0c0b14");
+    px(g,3,3,3,3,"#f5b942"); px(g,7,3,3,2,"#5ad1e6"); px(g,7,6,4,2,"#57e08a");
+    px(g,5,10,3,1,"#302d44"); px(g,3,11,7,1,"#26243a");
+  })();
+
+  /* detail-avatar mini render */
+  function renderAvatar(canvas, kind){
+    const g=canvas.getContext("2d"); g.imageSmoothingEnabled=false;
+    g.clearRect(0,0,16,16); g.save(); g.translate(8,11); g.scale(.62,.62);
+    drawChar(g, kind, 0); g.restore();
+  }
+
+  /* ================= stage scene ================= */
+  const stage=document.getElementById("stage"), sx=stage.getContext("2d");
+  sx.imageSmoothingEnabled=false;
+  const W=620,H=360;
+
+  // desks: [x,y] top-left of a desk block near each seated agent
+  const desks = agents.filter(a=>!a.walk).map(a=>({x:a.x-18,y:a.y+14}));
+
+  function drawFloor(){
+    // base
+    sx.fillStyle="#181626"; sx.fillRect(0,0,W,H);
+    // isometric-ish tile grid
+    const t=31;
+    for(let y=0;y<H;y+=t){
+      for(let x=0;x<W;x+=t){
+        const alt=((x/t + y/t)&1);
+        sx.fillStyle = alt ? "#1b1930" : "#191728";
+        sx.fillRect(x,y,t-1,t-1);
+      }
+    }
+    // top wall band with skyline
+    const wg=sx.createLinearGradient(0,0,0,64);
+    wg.addColorStop(0,"#241f3a"); wg.addColorStop(1,"#1a1730");
+    sx.fillStyle=wg; sx.fillRect(0,0,W,64);
+    // skyline windows
+    for(let i=0;i<26;i++){
+      const bx=8+i*24, bh=18+((i*7)%26), by=44-bh;
+      sx.fillStyle="#120f22"; sx.fillRect(bx,by,16,bh);
+      for(let wy=by+3;wy<44;wy+=6){
+        sx.fillStyle=((i+wy)&3)? "#3a3357":"#f5b94233";
+        sx.fillRect(bx+2,wy,3,3); sx.fillRect(bx+8,wy,3,3);
+      }
+    }
+    sx.fillStyle="#0c0b14"; sx.fillRect(0,62,W,3);
+  }
+
+  function drawDesk(d){
+    // desk shadow + top
+    px(sx,d.x-2,d.y+12,40,4,"#00000040");
+    px(sx,d.x,d.y,36,14,"#2a2436");
+    px(sx,d.x,d.y,36,3,"#3a3550");
+    px(sx,d.x+2,d.y+14,4,6,"#20202c");
+    px(sx,d.x+30,d.y+14,4,6,"#20202c");
+    // monitor
+    px(sx,d.x+11,d.y-9,14,10,"#15121f");
+    px(sx,d.x+12,d.y-8,12,8,"#0c0b14");
+    px(sx,d.x+13,d.y-7,4,3,"#5ad1e6"); px(sx,d.x+18,d.y-7,5,2,"#f5b942");
+    px(sx,d.x+17,d.y+1,2,2,"#15121f");
+  }
+
+  function roundRect(g,x,y,w,h,r){
+    g.beginPath();
+    g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r);
+    g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath();
+  }
+
+  function drawTag(text,cx,topY,accent){
+    sx.font="9px "+getComputedStyle(document.body).fontFamily;
+    sx.textAlign="left";
+    const w=sx.measureText(text).width+10, x=Math.round(cx-w/2), y=topY;
+    sx.fillStyle="#0c0b14e0"; roundRect(sx,x,y,w,13,3); sx.fill();
+    sx.strokeStyle=accent+"66"; sx.lineWidth=1; roundRect(sx,x+.5,y+.5,w-1,12,3); sx.stroke();
+    sx.fillStyle="#d9d5e8"; sx.fillText(text,x+5,y+9);
+  }
+  function drawBubble(text,cx,topY){
+    sx.font="9px "+getComputedStyle(document.body).fontFamily;
+    const w=sx.measureText(text).width+12, x=Math.round(cx-w/2), y=topY;
+    sx.fillStyle="#efe7d8f2"; roundRect(sx,x,y,w,14,4); sx.fill();
+    sx.fillStyle="#efe7d8f2";
+    sx.beginPath(); sx.moveTo(cx-3,y+13); sx.lineTo(cx+3,y+13); sx.lineTo(cx,y+18); sx.fill();
+    sx.fillStyle="#2a2233"; sx.fillText(text,x+6,y+9);
+  }
+
+  let selectedId="master";
+  let t=0;
+
+  function frame(){
+    t += 1;
+    drawFloor();
+    desks.forEach(drawDesk);
+
+    // sort by y for depth
+    const order=[...agents].sort((a,b)=>a.y-b.y);
+    for(const a of order){
+      // walking wander
+      if(a.walk && !reduce){
+        a._px = (a._px ?? a.x);
+        a._phase = (a._phase ?? Math.random()*6.28);
+        a.dx = Math.sin(t*0.012 + a._phase)*26;
+      } else a.dx=0;
+      const ax=a.x + (a.dx||0), ay=a.y;
+      const bob = reduce?0:(Math.sin(t*0.08 + a.x)*0.6);
+      const walkFrame = a.walk && !reduce ? (Math.floor(t/8+a.x)%2) : 0;
+
+      sx.save();
+      sx.translate(Math.round(ax), Math.round(ay+bob));
+      const sc=1.55; sx.scale(sc,sc);
+      // selection ring
+      if(a.id===selectedId){
+        sx.fillStyle="#f5b94222";
+        sx.beginPath(); sx.ellipse(0,16,10,4,0,0,6.28); sx.fill();
+        sx.strokeStyle="#f5b942"; sx.lineWidth=1;
+        sx.beginPath(); sx.ellipse(0,16,10,4,0,0,6.28); sx.stroke();
+      }
+      drawChar(sx, a.kind, walkFrame);
+      sx.restore();
+
+      // led over head
+      const headTop = ay+bob - 16*1;
+      sx.fillStyle=LED[a.led];
+      sx.beginPath(); sx.arc(Math.round(ax)+11, Math.round(headTop)-2, 2.2, 0, 6.28); sx.fill();
+
+      // name tag + status bubble
+      drawTag(a.name, Math.round(ax), Math.round(ay)-40, LED[a.led]);
+      if(a.bubble) drawBubble(a.bubble, Math.round(ax), Math.round(ay)-58);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  /* ---------- hit testing ---------- */
+  stage.addEventListener("click",(e)=>{
+    const r=stage.getBoundingClientRect();
+    const mx=(e.clientX-r.left)*(W/r.width);
+    const my=(e.clientY-r.top)*(H/r.height);
+    let best=null, bd=1e9;
+    for(const a of agents){
+      const ax=a.x+(a.dx||0);
+      const d=Math.hypot(mx-ax, my-(a.y+2));
+      if(d<26 && d<bd){bd=d; best=a;}
+    }
+    if(best){ selectedId=best.id; renderDetail(best); }
+  });
+
+  /* ---------- detail panel ---------- */
+  function renderDetail(a){
+    document.getElementById("dName").textContent=a.name;
+    document.getElementById("dRole").textContent=a.roleFull;
+    document.getElementById("dState").textContent=a.status;
+    document.getElementById("dLast").textContent=a.last;
+    document.getElementById("dTask").textContent=a.task;
+    document.getElementById("dWorkers").textContent=a.workers;
+    document.getElementById("dCost").textContent=a.cost;
+    const led=document.getElementById("dLed");
+    led.style.background=LED[a.led]; led.style.boxShadow="0 0 8px "+LED[a.led];
+    renderAvatar(document.getElementById("detailAv"), a.kind);
+  }
+
+  /* ---------- quota gauges ---------- */
+  const quota=[
+    {lab:"Claude", win:"5시간", pct:42, pace:41, reset:"18:59", cls:""},
+    {lab:"Claude", win:"주간", pct:79, pace:64, reset:"20:02", cls:"warn"},
+    {lab:"Codex", win:"5시간", pct:39, pace:52, reset:"23:00", cls:""},
+    {lab:"Codex", win:"주간", pct:12, pace:30, reset:"15:02", cls:"cool"},
+  ];
+  const qwrap=document.getElementById("quota");
+  qwrap.innerHTML = quota.map(q=>{
+    const over = q.pct - q.pace;
+    const cls = q.cls || (q.pct>=85?"crit":q.pct>=70?"warn":"");
+    const metaR = over>3
+      ? `<span class="over">초과 +${over}%p</span>`
+      : `<span>페이스 대비 ${over>=0?'+':''}${over}%p</span>`;
+    return `<div class="gauge">
+      <div class="grow"><span class="glab">${q.lab} <i>${q.win} · ${q.reset} 리셋</i></span>
+      <span class="gpct">${q.pct}%</span></div>
+      <div class="track"><div class="fill ${cls}" style="width:${q.pct}%"></div>
+        <div class="pace" style="left:${q.pace}%"></div></div>
+      <div class="gmeta"><span>권고 페이스 ${q.pace}%</span>${metaR}</div>
+    </div>`;
+  }).join("");
+
+  /* ---------- tasks ---------- */
+  const tasks=[
+    {p:"P3", tt:"사이트 구현 (폼 파트)", pm:"SubPM j20iyr", st:"wait", stl:"대기", ver:"v1.0"},
+    {p:"—", tt:"오너 포트폴리오 사이트 (응대 위젯 내장)", pm:"SubPM j20iyr", st:"run", stl:"진행중", ver:"v2.0"},
+    {p:"P2", tt:"디자인 시스템 (폼 파트)", pm:"SubPM j20iyr", st:"wait", stl:"확정대기", ver:"v2.0"},
+    {p:"P1", tt:"콘텐츠 팩 (폼 파트)", pm:"SubPM j20iyr", st:"wait", stl:"확정대기", ver:"v2.0"},
+    {p:"#2", tt:"DB 분리 audit", pm:"SubPM njzbjb", st:"hold", stl:"내일 10:30", ver:"—"},
+    {p:"#3", tt:"뉴스백필 FM 대기", pm:"Sys Engineer", st:"hold", stl:"FM 대기", ver:"—"},
+    {p:"#5", tt:"Watch 매핑 확정", pm:"Agentic Network", st:"run", stl:"진행중", ver:"—"},
+  ];
+  document.getElementById("tasks").innerHTML = tasks.map(x=>`
+    <div class="task">
+      <span class="p">${x.p}</span>
+      <div class="info">
+        <div class="tt">${x.tt}</div>
+        <div class="meta">담당 ${x.pm}</div>
+      </div>
+      <span class="badge ${x.st}">${x.stl}</span>
+      <span class="ver">${x.ver}</span>
+    </div>`).join("");
+
+  /* ---------- clock ---------- */
+  function tick(){
+    const d=new Date();
+    const p=n=>String(n).padStart(2,"0");
+    document.getElementById("clock").textContent=`${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+  }
+  tick(); setInterval(tick,1000);
+
+  /* ---------- go ---------- */
+  renderDetail(agents[0]);
+  if(reduce){ drawFloor(); desks.forEach(drawDesk);
+    // static single paint
+    for(const a of [...agents].sort((x,y)=>x.y-y.y)){
+      sx.save(); sx.translate(a.x,a.y); sx.scale(1.55,1.55);
+      if(a.id===selectedId){sx.strokeStyle="#f5b942";sx.beginPath();sx.ellipse(0,16,10,4,0,0,6.28);sx.stroke();}
+      drawChar(sx,a.kind,0); sx.restore();
+      drawTag(a.name,a.x,a.y-40,LED[a.led]);
+      if(a.bubble) drawBubble(a.bubble,a.x,a.y-58);
+    }
+  } else requestAnimationFrame(frame);
+})();
+</script>
